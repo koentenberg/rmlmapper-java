@@ -80,6 +80,12 @@ public class MappingOptimizer {
                     parentSubjectMap = parentSubjectMaps.get(0);
                 }
 
+                List<Term> parentTermTypeMaps = Utils.getObjectsFromQuads(rmlStore.getQuads(parentSubjectMap, new NamedNode(NAMESPACES.RML2 + "termType"), null));
+                Term parentTermTypeMap = null;
+                if (!parentTermTypeMaps.isEmpty()) {
+                    parentTermTypeMap = parentTermTypeMaps.get(0);
+                }
+
                 boolean safeSelfJoinElimination = true;
 
                 // if no join condition, we can safely eliminate the self-join
@@ -124,6 +130,14 @@ public class MappingOptimizer {
                         }
                     }
                 }
+
+                // if the parent termtype is BlankNode, do not break BlankNode linking
+                if (parentSubjectMap != null && joinConditions.isEmpty() && parentTermTypeMap != null && safeSelfJoinElimination) {
+                    if (parentTermTypeMap.equals( new NamedNode(NAMESPACES.RML2 + "BlankNode")) ) {
+                        safeSelfJoinElimination = false;
+                    }
+                }
+
                 if (safeSelfJoinElimination) {
                     // now we rewrite the mapping file to eliminate the self-join
                     boolean termTypeAdded = false;
